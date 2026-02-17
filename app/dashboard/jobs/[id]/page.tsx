@@ -12,6 +12,7 @@ import {
   Brain,
 } from 'lucide-react'
 import { JobActions } from './JobActions'
+import { MarkdownContent } from '@/components/MarkdownContent'
 
 const matchBadge: Record<string, { label: string; style: string }> = {
   perfect: { label: 'Perfect Match', style: 'bg-sage/15 text-sage border-sage/25' },
@@ -137,7 +138,7 @@ export default async function JobDetailPage({ params }: { params: { id: string }
             <Brain className="h-4 w-4 text-primary" />
             <h2 className="text-lg font-serif font-bold">AI Match Analysis</h2>
           </div>
-          <p className="text-sm text-muted-foreground leading-relaxed">{job.match_reasoning}</p>
+          <MarkdownContent content={job.match_reasoning} className="text-muted-foreground" />
         </div>
       )}
 
@@ -145,9 +146,7 @@ export default async function JobDetailPage({ params }: { params: { id: string }
       {job.description && (
         <div className="card-organic p-6 space-y-3 animate-fade-in-up delay-200">
           <h2 className="text-lg font-serif font-bold">Job Description</h2>
-          <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-            {job.description}
-          </div>
+          <MarkdownContent content={job.description} className="text-muted-foreground" />
         </div>
       )}
 
@@ -155,9 +154,7 @@ export default async function JobDetailPage({ params }: { params: { id: string }
       {job.requirements && (
         <div className="card-organic p-6 space-y-3 animate-fade-in-up delay-300">
           <h2 className="text-lg font-serif font-bold">Requirements</h2>
-          <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-            {job.requirements}
-          </div>
+          <MarkdownContent content={job.requirements} className="text-muted-foreground" />
         </div>
       )}
     </div>
