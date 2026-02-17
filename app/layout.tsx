@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { Source_Sans_3, Libre_Baskerville } from "next/font/google"
+import { Toaster } from "sonner"
 import "./globals.css"
 
 const sourceSans = Source_Sans_3({
@@ -32,6 +33,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${sourceSans.variable} ${libreBaskerville.variable} font-sans`}>
         {children}
+        <Toaster richColors position="bottom-right" />
       </body>
     </html>
   )
