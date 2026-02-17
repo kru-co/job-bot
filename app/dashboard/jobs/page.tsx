@@ -2,7 +2,8 @@ import { createSupabaseServerClient } from '@/lib/supabase'
 import { JobCard, type Job } from '@/components/JobCard'
 import { FilterTabs } from '@/components/FilterTabs'
 import { SearchForm } from '@/components/SearchForm'
-import { Briefcase } from 'lucide-react'
+import { Briefcase, Plus } from 'lucide-react'
+import Link from 'next/link'
 
 async function getJobCounts(supabase: ReturnType<typeof createSupabaseServerClient>) {
   const [all, perfect, wider, queued, applied, skipped] = await Promise.all([
@@ -70,14 +71,23 @@ export default async function JobsPage({
   return (
     <div className="p-8 max-w-6xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3 animate-fade-in-up">
-        <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-          <Briefcase className="h-5 w-5 text-primary" />
+      <div className="flex items-center justify-between animate-fade-in-up">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Briefcase className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-serif font-bold">Jobs</h1>
+            <p className="text-sm text-muted-foreground">Discovered opportunities</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-3xl font-serif font-bold">Jobs</h1>
-          <p className="text-sm text-muted-foreground">Discovered opportunities</p>
-        </div>
+        <Link
+          href="/dashboard/jobs/new"
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors"
+        >
+          <Plus className="h-4 w-4" />
+          Add Job
+        </Link>
       </div>
 
       {/* Filters + Search */}
