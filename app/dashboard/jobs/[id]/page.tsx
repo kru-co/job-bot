@@ -10,6 +10,7 @@ import {
   Calendar,
   Wifi,
   Brain,
+  FileText,
 } from 'lucide-react'
 import { JobActions } from './JobActions'
 import { MarkdownContent } from '@/components/MarkdownContent'
@@ -30,7 +31,16 @@ const statusStyle: Record<string, string> = {
 export default async function JobDetailPage({ params }: { params: { id: string } }) {
   const supabase = createSupabaseServerClient()
 
-  const { data: job, error } = await supabase.from('jobs').select('*').eq('id', params.id).single()
+  const [{ data: job, error }, { data: coverLetter }] = await Promise.all([
+    supabase.from('jobs').select('*').eq('id', params.id).single(),
+    supabase
+      .from('cover_letters')
+      .select('id, content, created_at')
+      .eq('job_id', params.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single(),
+  ])
 
   if (error || !job) notFound()
 
@@ -118,7 +128,7 @@ export default async function JobDetailPage({ params }: { params: { id: string }
 
         {/* Actions */}
         <div className="flex items-center justify-between pt-4 border-t border-border/50 flex-wrap gap-4">
-          <JobActions jobId={job.id} currentStatus={job.status} />
+          <JobActions jobId={job.id} currentStatus={job.status} hasCoverLetter={!!coverLetter} />
           <a
             href={job.url}
             target="_blank"
@@ -155,6 +165,22 @@ export default async function JobDetailPage({ params }: { params: { id: string }
         <div className="card-organic p-6 space-y-3 animate-fade-in-up delay-300">
           <h2 className="text-lg font-serif font-bold">Requirements</h2>
           <MarkdownContent content={job.requirements} className="text-muted-foreground" />
+        </div>
+      )}
+
+      {/* Cover Letter */}
+      {coverLetter && (
+        <div className="card-organic p-6 space-y-3 animate-fade-in-up delay-400">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-primary" />
+              <h2 className="text-lg font-serif font-bold">Cover Letter</h2>
+            </div>
+            <span className="text-xs text-muted-foreground">
+              Generated {new Date(coverLetter.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </span>
+          </div>
+          <MarkdownContent content={coverLetter.content} className="text-muted-foreground" />
         </div>
       )}
     </div>

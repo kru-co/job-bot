@@ -3,14 +3,24 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { ListPlus, XCircle, RotateCcw, CheckCircle2 } from 'lucide-react'
+import {
+  ListPlus,
+  XCircle,
+  RotateCcw,
+  CheckCircle2,
+  Brain,
+  FileText,
+  Loader2,
+} from 'lucide-react'
 
 export function JobActions({
   jobId,
   currentStatus,
+  hasCoverLetter,
 }: {
   jobId: string
   currentStatus: string
+  hasCoverLetter?: boolean
 }) {
   const [status, setStatus] = useState(currentStatus)
   const [loading, setLoading] = useState<string | null>(null)
@@ -35,18 +45,82 @@ export function JobActions({
     }
   }
 
+  const analyzeMatch = async () => {
+    setLoading('analyze')
+    try {
+      const res = await fetch(`/api/jobs/${jobId}/analyze`, { method: 'POST' })
+      if (!res.ok) throw new Error()
+      toast.success('Match analysis complete!')
+      router.refresh()
+    } catch {
+      toast.error('Analysis failed. Check that your profile is set up in Settings.')
+    } finally {
+      setLoading(null)
+    }
+  }
+
+  const generateCoverLetter = async () => {
+    setLoading('cover-letter')
+    try {
+      const res = await fetch(`/api/jobs/${jobId}/cover-letter`, { method: 'POST' })
+      if (!res.ok) throw new Error()
+      toast.success('Cover letter generated!')
+      router.refresh()
+    } catch {
+      toast.error('Cover letter generation failed. Check your profile in Settings.')
+    } finally {
+      setLoading(null)
+    }
+  }
+
+  const aiButtons = (
+    <div className="flex gap-2 flex-wrap">
+      <button
+        onClick={analyzeMatch}
+        disabled={loading !== null}
+        className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {loading === 'analyze' ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <Brain className="h-3.5 w-3.5" />
+        )}
+        {loading === 'analyze' ? 'Analysing…' : 'Analyse Match'}
+      </button>
+      <button
+        onClick={generateCoverLetter}
+        disabled={loading !== null}
+        className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {loading === 'cover-letter' ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <FileText className="h-3.5 w-3.5" />
+        )}
+        {loading === 'cover-letter'
+          ? 'Generating…'
+          : hasCoverLetter
+          ? 'Regenerate Cover Letter'
+          : 'Generate Cover Letter'}
+      </button>
+    </div>
+  )
+
   if (status === 'applied') {
     return (
-      <div className="flex items-center gap-2 text-sm text-sage font-medium">
-        <CheckCircle2 className="h-4 w-4" />
-        Applied
+      <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex items-center gap-2 text-sm text-sage font-medium">
+          <CheckCircle2 className="h-4 w-4" />
+          Applied
+        </div>
+        {aiButtons}
       </div>
     )
   }
 
   if (status === 'queued') {
     return (
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 flex-wrap">
         <div className="flex items-center gap-2 text-sm text-clay font-medium">
           <div className="h-2 w-2 rounded-full bg-clay animate-pulse" />
           Queued for application
@@ -59,13 +133,14 @@ export function JobActions({
           <RotateCcw className="h-3.5 w-3.5" />
           Undo
         </button>
+        {aiButtons}
       </div>
     )
   }
 
   if (status === 'skipped') {
     return (
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 flex-wrap">
         <div className="flex items-center gap-2 text-sm text-muted-foreground font-medium">
           <XCircle className="h-4 w-4" />
           Skipped
@@ -78,11 +153,12 @@ export function JobActions({
           <RotateCcw className="h-3.5 w-3.5" />
           Restore
         </button>
+        {aiButtons}
       </div>
     )
   }
 
-  // discovered state — show Queue + Skip
+  // discovered state — show Queue + Skip + AI buttons
   return (
     <div className="flex gap-3 flex-wrap">
       <button
@@ -101,6 +177,7 @@ export function JobActions({
         <XCircle className="h-4 w-4" />
         {loading === 'skipped' ? 'Skipping…' : 'Skip'}
       </button>
+      {aiButtons}
     </div>
   )
 }
