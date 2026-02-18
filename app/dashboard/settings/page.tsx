@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { Settings, User, Bot, Save, Loader2 } from 'lucide-react'
+import { Settings, User, Bot, Save, Loader2, Rss, Plus, Trash2 } from 'lucide-react'
 import { TagInput } from '@/components/TagInput'
 import type { UserProfile } from '@/lib/supabase'
 
@@ -40,9 +40,12 @@ export default function SettingsPage() {
   const [dailyQuota, setDailyQuota] = useState({ total: 8, perfect_match: 3, wider_net: 5 })
   const [botEnabled, setBotEnabled] = useState(true)
   const [companyWeeklyLimit, setCompanyWeeklyLimit] = useState(2)
+  const [feedUrls, setFeedUrls] = useState<string[]>([])
+  const [feedInput, setFeedInput] = useState('')
   const [loading, setLoading] = useState(true)
   const [savingProfile, setSavingProfile] = useState(false)
   const [savingBot, setSavingBot] = useState(false)
+  const [savingFeeds, setSavingFeeds] = useState(false)
 
   useEffect(() => {
     fetch('/api/settings')
@@ -61,6 +64,7 @@ export default function SettingsPage() {
         if (data.bot_enabled) setBotEnabled((data.bot_enabled as { enabled: boolean }).enabled)
         if (data.company_weekly_limit)
           setCompanyWeeklyLimit((data.company_weekly_limit as { limit: number }).limit)
+        if (Array.isArray(data.feed_urls)) setFeedUrls(data.feed_urls as string[])
       })
       .catch(() => toast.error('Failed to load settings'))
       .finally(() => setLoading(false))
@@ -109,6 +113,30 @@ export default function SettingsPage() {
     } finally {
       setSavingBot(false)
     }
+  }
+
+  const saveFeeds = async () => {
+    setSavingFeeds(true)
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'feed_urls', value: feedUrls }),
+      })
+      if (!res.ok) throw new Error()
+      toast.success('Feed URLs saved!')
+    } catch {
+      toast.error('Failed to save feed URLs')
+    } finally {
+      setSavingFeeds(false)
+    }
+  }
+
+  const addFeedUrl = () => {
+    const url = feedInput.trim()
+    if (!url || feedUrls.includes(url)) { setFeedInput(''); return }
+    setFeedUrls([...feedUrls, url])
+    setFeedInput('')
   }
 
   const inputClass =
@@ -277,6 +305,67 @@ export default function SettingsPage() {
           >
             {savingProfile ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
             {savingProfile ? 'Saving…' : 'Save Profile'}
+          </button>
+        </div>
+      </div>
+
+      {/* RSS Feeds */}
+      <div className="card-organic p-8 space-y-6 animate-fade-in-up delay-150">
+        <div className="flex items-center gap-2 pb-2 border-b border-border/50">
+          <Rss className="h-4 w-4 text-primary" />
+          <h2 className="text-lg font-serif font-bold">Job Discovery Feeds</h2>
+        </div>
+        <p className="text-sm text-muted-foreground -mt-2">
+          RSS feed URLs to pull new PM job listings from. Use the &ldquo;Discover&rdquo; button on the Jobs page to fetch them.
+        </p>
+
+        {/* Saved feeds */}
+        {feedUrls.length > 0 && (
+          <ul className="space-y-2">
+            {feedUrls.map((url) => (
+              <li key={url} className="flex items-center gap-3 px-3 py-2 rounded-xl border border-border bg-background text-sm">
+                <span className="flex-1 truncate text-muted-foreground font-mono text-xs">{url}</span>
+                <button
+                  type="button"
+                  onClick={() => setFeedUrls(feedUrls.filter((u) => u !== url))}
+                  className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {/* Add new feed */}
+        <div className="flex gap-2">
+          <input
+            type="url"
+            value={feedInput}
+            onChange={(e) => setFeedInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addFeedUrl() } }}
+            placeholder="https://example.com/jobs.rss"
+            className="flex-1 px-3 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+          />
+          <button
+            type="button"
+            onClick={addFeedUrl}
+            disabled={!feedInput.trim()}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-border text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground/30 transition-colors disabled:opacity-40"
+          >
+            <Plus className="h-4 w-4" />
+            Add
+          </button>
+        </div>
+
+        <div className="flex justify-end">
+          <button
+            onClick={saveFeeds}
+            disabled={savingFeeds}
+            className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {savingFeeds ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            {savingFeeds ? 'Saving…' : 'Save Feeds'}
           </button>
         </div>
       </div>

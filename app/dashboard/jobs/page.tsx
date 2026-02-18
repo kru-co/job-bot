@@ -3,6 +3,7 @@ import { JobCard, type Job } from '@/components/JobCard'
 import { FilterTabs } from '@/components/FilterTabs'
 import { SearchForm } from '@/components/SearchForm'
 import { ImportUrlButton } from '@/components/ImportUrlButton'
+import { AnalyseAllButton, DiscoverButton } from '@/components/JobsActions'
 import { Briefcase, Plus } from 'lucide-react'
 import Link from 'next/link'
 
@@ -58,7 +59,11 @@ export default async function JobsPage({
 
   if (query) q = q.or(`title.ilike.%${query}%,company.ilike.%${query}%`)
 
-  const [{ data: jobs }, counts] = await Promise.all([q, getJobCounts(supabase)])
+  const [{ data: jobs }, counts, { count: unanalyzedCount }] = await Promise.all([
+    q,
+    getJobCounts(supabase),
+    supabase.from('jobs').select('*', { count: 'exact', head: true }).is('match_quality', null),
+  ])
 
   const tabs = [
     { label: 'All', value: 'all', count: counts.all },
@@ -83,6 +88,8 @@ export default async function JobsPage({
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <DiscoverButton />
+          <AnalyseAllButton unanalyzed={unanalyzedCount ?? 0} />
           <ImportUrlButton />
           <Link
             href="/dashboard/jobs/new"

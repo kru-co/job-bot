@@ -11,6 +11,7 @@ import {
   Brain,
   FileText,
   Loader2,
+  SendHorizonal,
 } from 'lucide-react'
 
 export function JobActions({
@@ -54,6 +55,21 @@ export function JobActions({
       router.refresh()
     } catch {
       toast.error('Analysis failed. Check that your profile is set up in Settings.')
+    } finally {
+      setLoading(null)
+    }
+  }
+
+  const markApplied = async () => {
+    setLoading('apply')
+    try {
+      const res = await fetch(`/api/jobs/${jobId}/apply`, { method: 'POST' })
+      if (!res.ok) throw new Error()
+      setStatus('applied')
+      toast.success('Application logged!')
+      router.refresh()
+    } catch {
+      toast.error('Failed to log application.')
     } finally {
       setLoading(null)
     }
@@ -125,6 +141,18 @@ export function JobActions({
           <div className="h-2 w-2 rounded-full bg-clay animate-pulse" />
           Queued for application
         </div>
+        <button
+          onClick={markApplied}
+          disabled={loading !== null}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-sage/15 text-sage border border-sage/25 text-sm font-medium hover:bg-sage/25 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {loading === 'apply' ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <SendHorizonal className="h-3.5 w-3.5" />
+          )}
+          {loading === 'apply' ? 'Logging…' : 'I Applied'}
+        </button>
         <button
           onClick={() => update('discovered', 'Moved back to discovered')}
           disabled={loading !== null}

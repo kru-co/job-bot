@@ -82,8 +82,8 @@ export default async function ApplicationsPage({
               <Send className="h-6 w-6 text-primary" />
             </div>
             <p className="font-semibold">No applications yet</p>
-            <p className="text-muted-foreground text-sm mt-1">
-              Queue jobs from the Jobs page and the bot will apply automatically.
+            <p className="text-muted-foreground text-sm mt-1 mb-4">
+              Queue a job, then click &ldquo;I Applied&rdquo; on the job detail page to log your application here.
             </p>
           </div>
         ) : (
