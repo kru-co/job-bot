@@ -140,9 +140,9 @@ export type UserProfile = {
   target_title: string
   years_experience: string
   background: string
-  skills: string
+  skills: string[]
   target_salary: number
   location: string
   remote_preference: 'remote' | 'hybrid' | 'onsite' | 'any'
-  target_industries: string
+  target_industries: string[]
 }

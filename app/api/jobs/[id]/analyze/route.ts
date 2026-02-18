@@ -36,8 +36,8 @@ Years of Experience: ${profile.years_experience ?? 'Not specified'}
 Location: ${profile.location ?? 'Not specified'}
 Remote Preference: ${profile.remote_preference ?? 'any'}
 Target Salary: ${profile.target_salary ? `$${Number(profile.target_salary).toLocaleString()}` : 'Not specified'}
-Target Industries: ${profile.target_industries ?? 'Not specified'}
-Key Skills: ${profile.skills ?? 'Not specified'}
+Target Industries: ${Array.isArray(profile.target_industries) ? profile.target_industries.join(', ') : (profile.target_industries ?? 'Not specified')}
+Key Skills: ${Array.isArray(profile.skills) ? profile.skills.join(', ') : (profile.skills ?? 'Not specified')}
 Background: ${profile.background ?? 'Not provided'}
 
 JOB POSTING:

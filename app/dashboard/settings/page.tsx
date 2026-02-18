@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Settings, User, Bot, Save, Loader2 } from 'lucide-react'
+import { TagInput } from '@/components/TagInput'
 import type { UserProfile } from '@/lib/supabase'
 
 const defaultProfile: UserProfile = {
@@ -11,11 +12,27 @@ const defaultProfile: UserProfile = {
   target_title: 'Product Manager',
   years_experience: '7-10',
   background: '',
-  skills: '',
+  skills: [],
   target_salary: 165000,
   location: '',
   remote_preference: 'any',
-  target_industries: '',
+  target_industries: [],
+}
+
+const remoteOptions: { value: UserProfile['remote_preference']; label: string }[] = [
+  { value: 'any', label: 'Any' },
+  { value: 'remote', label: 'Remote' },
+  { value: 'hybrid', label: 'Hybrid' },
+  { value: 'onsite', label: 'On-site' },
+]
+
+// Coerce a saved value to string[] (handles old plain-string format gracefully)
+function toArray(value: unknown): string[] {
+  if (Array.isArray(value)) return value as string[]
+  if (typeof value === 'string' && value.trim()) {
+    return value.split(',').map((s) => s.trim()).filter(Boolean)
+  }
+  return []
 }
 
 export default function SettingsPage() {
@@ -31,7 +48,15 @@ export default function SettingsPage() {
     fetch('/api/settings')
       .then((r) => r.json())
       .then((data) => {
-        if (data.user_profile) setProfile({ ...defaultProfile, ...(data.user_profile as UserProfile) })
+        if (data.user_profile) {
+          const saved = data.user_profile as Record<string, unknown>
+          setProfile({
+            ...defaultProfile,
+            ...(saved as Partial<UserProfile>),
+            skills: toArray(saved.skills),
+            target_industries: toArray(saved.target_industries),
+          })
+        }
         if (data.daily_quota) setDailyQuota(data.daily_quota as typeof dailyQuota)
         if (data.bot_enabled) setBotEnabled((data.bot_enabled as { enabled: boolean }).enabled)
         if (data.company_weekly_limit)
@@ -86,6 +111,9 @@ export default function SettingsPage() {
     }
   }
 
+  const inputClass =
+    'w-full px-3 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30'
+
   if (loading) {
     return (
       <div className="p-8 max-w-4xl mx-auto flex items-center justify-center min-h-[400px]">
@@ -125,7 +153,7 @@ export default function SettingsPage() {
               value={profile.name}
               onChange={(e) => setProfile({ ...profile, name: e.target.value })}
               placeholder="Your full name"
-              className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className={inputClass}
             />
           </div>
 
@@ -136,7 +164,7 @@ export default function SettingsPage() {
               value={profile.email}
               onChange={(e) => setProfile({ ...profile, email: e.target.value })}
               placeholder="your@email.com"
-              className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className={inputClass}
             />
           </div>
 
@@ -147,7 +175,7 @@ export default function SettingsPage() {
               value={profile.target_title}
               onChange={(e) => setProfile({ ...profile, target_title: e.target.value })}
               placeholder="e.g. Senior Product Manager"
-              className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className={inputClass}
             />
           </div>
 
@@ -158,7 +186,7 @@ export default function SettingsPage() {
               value={profile.years_experience}
               onChange={(e) => setProfile({ ...profile, years_experience: e.target.value })}
               placeholder="e.g. 7-10"
-              className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className={inputClass}
             />
           </div>
 
@@ -169,24 +197,32 @@ export default function SettingsPage() {
               value={profile.location}
               onChange={(e) => setProfile({ ...profile, location: e.target.value })}
               placeholder="e.g. Seattle, WA"
-              className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className={inputClass}
             />
           </div>
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Remote Preference</label>
-            <select
-              value={profile.remote_preference}
-              onChange={(e) =>
-                setProfile({ ...profile, remote_preference: e.target.value as UserProfile['remote_preference'] })
-              }
-              className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-            >
-              <option value="any">Any</option>
-              <option value="remote">Remote only</option>
-              <option value="hybrid">Hybrid</option>
-              <option value="onsite">On-site</option>
-            </select>
+            <div className="flex rounded-xl border border-border bg-background overflow-hidden h-[42px]">
+              {remoteOptions.map((opt, i) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setProfile({ ...profile, remote_preference: opt.value })}
+                  className={[
+                    'flex-1 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/30',
+                    i > 0 ? 'border-l border-border' : '',
+                    profile.remote_preference === opt.value
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/40',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="space-y-1.5">
@@ -196,30 +232,26 @@ export default function SettingsPage() {
               value={profile.target_salary}
               onChange={(e) => setProfile({ ...profile, target_salary: Number(e.target.value) })}
               placeholder="165000"
-              className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className={inputClass}
             />
           </div>
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Target Industries</label>
-            <input
-              type="text"
-              value={profile.target_industries}
-              onChange={(e) => setProfile({ ...profile, target_industries: e.target.value })}
-              placeholder="e.g. Cloud, Hardware, IoT, SaaS"
-              className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+            <TagInput
+              tags={profile.target_industries}
+              onChange={(tags) => setProfile({ ...profile, target_industries: tags })}
+              placeholder="Type an industry and press Enter…"
             />
           </div>
         </div>
 
         <div className="space-y-1.5">
           <label className="text-sm font-medium">Key Skills</label>
-          <input
-            type="text"
-            value={profile.skills}
-            onChange={(e) => setProfile({ ...profile, skills: e.target.value })}
-            placeholder="e.g. Product strategy, roadmapping, Agile, data analysis, stakeholder management"
-            className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+          <TagInput
+            tags={profile.skills}
+            onChange={(tags) => setProfile({ ...profile, skills: tags })}
+            placeholder="Type a skill and press Enter…"
           />
         </div>
 
@@ -284,7 +316,7 @@ export default function SettingsPage() {
               max={50}
               value={dailyQuota.total}
               onChange={(e) => setDailyQuota({ ...dailyQuota, total: Number(e.target.value) })}
-              className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className={inputClass}
             />
           </div>
           <div className="space-y-1.5">
@@ -295,7 +327,7 @@ export default function SettingsPage() {
               max={20}
               value={dailyQuota.perfect_match}
               onChange={(e) => setDailyQuota({ ...dailyQuota, perfect_match: Number(e.target.value) })}
-              className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className={inputClass}
             />
           </div>
           <div className="space-y-1.5">
@@ -306,7 +338,7 @@ export default function SettingsPage() {
               max={30}
               value={dailyQuota.wider_net}
               onChange={(e) => setDailyQuota({ ...dailyQuota, wider_net: Number(e.target.value) })}
-              className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className={inputClass}
             />
           </div>
         </div>
@@ -319,7 +351,7 @@ export default function SettingsPage() {
             max={10}
             value={companyWeeklyLimit}
             onChange={(e) => setCompanyWeeklyLimit(Number(e.target.value))}
-            className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className={inputClass}
           />
         </div>
 

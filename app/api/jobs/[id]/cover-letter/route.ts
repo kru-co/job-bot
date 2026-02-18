@@ -38,7 +38,7 @@ Target Title: ${targetTitle}
 Years of Experience: ${profile.years_experience ?? 'several years'}
 Location: ${profile.location ?? ''}
 Target Salary: ${profile.target_salary ? `$${Number(profile.target_salary).toLocaleString()}` : 'competitive'}
-Key Skills: ${profile.skills ?? ''}
+Key Skills: ${Array.isArray(profile.skills) ? profile.skills.join(', ') : (profile.skills ?? '')}
 Background: ${profile.background ?? 'Experienced product manager'}
 
 JOB TO APPLY FOR:
