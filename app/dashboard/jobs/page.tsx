@@ -2,6 +2,7 @@ import { createSupabaseServerClient } from '@/lib/supabase'
 import { JobCard, type Job } from '@/components/JobCard'
 import { FilterTabs } from '@/components/FilterTabs'
 import { SearchForm } from '@/components/SearchForm'
+import { ImportUrlButton } from '@/components/ImportUrlButton'
 import { Briefcase, Plus } from 'lucide-react'
 import Link from 'next/link'
 
@@ -81,13 +82,16 @@ export default async function JobsPage({
             <p className="text-sm text-muted-foreground">Discovered opportunities</p>
           </div>
         </div>
-        <Link
-          href="/dashboard/jobs/new"
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors"
-        >
-          <Plus className="h-4 w-4" />
-          Add Job
-        </Link>
+        <div className="flex items-center gap-2">
+          <ImportUrlButton />
+          <Link
+            href="/dashboard/jobs/new"
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:bg-primary/90 transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            Add Job
+          </Link>
+        </div>
       </div>
 
       {/* Filters + Search */}
